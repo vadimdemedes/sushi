@@ -1,0 +1,35 @@
+{
+  "name": "sushi",
+  "version": "1.0.0",
+  "description": "Express for CLI apps",
+  "main": "index.js",
+  "dependencies": {
+    "each-async": "^1.1.1",
+    "minimist": "^1.2.0",
+    "path-to-regexp": "^1.2.1"
+  },
+  "devDependencies": {
+    "ava": "^0.2.0",
+    "make-lint": "^1.0.1"
+  },
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vdemedes/sushi.git"
+  },
+  "keywords": [
+    "cli",
+    "express"
+  ],
+  "author": "Vadim Demedes <vdemedes@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vdemedes/sushi/issues"
+  },
+  "homepage": "https://github.com/vdemedes/sushi#readme",
+  "files": [
+    "index.js"
+  ]
+}
