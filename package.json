@@ -5,8 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "each-async": "^1.1.1",
-    "minimist": "^1.2.0",
-    "path-to-regexp": "^1.2.1"
+    "minimist": "^1.2.0"
   },
   "devDependencies": {
     "ava": "^0.2.0",
