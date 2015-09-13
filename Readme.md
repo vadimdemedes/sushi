@@ -2,7 +2,14 @@
 
 Express for CLI apps.
 
-![](media/header.jpg)
+<h1 align="center">
+	<br>
+	<img width="300" src="media/header.jpg">
+	<br>
+	<br>
+	<br>
+</h1>
+
 
 
 ### Installation
