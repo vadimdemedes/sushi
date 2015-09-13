@@ -92,7 +92,7 @@ Sushi.prototype._detectCommand = function (argv, options) {
 
   loop: while (length > 0) {
     // list of arguments
-    var list = args._.slice(0, length--).join(' ');
+    var list = args._.slice(0, length--).join(' ') + ' ';
 
     var i = 0;
 
@@ -100,13 +100,13 @@ Sushi.prototype._detectCommand = function (argv, options) {
       // current command name
       var name = this.commands[i].name;
 
-      var isMatch = list.indexOf(name) >= 0;
+      var isMatch = list.indexOf(name + ' ') >= 0;
 
       if (isMatch) {
         command = this.commands[i];
 
         // remove command name from argument list
-        args._ = list.replace(name + ' ', '').split(' ');
+        args._ = list.replace(name + ' ', '').trim().split(' ');
 
         break loop;
       }

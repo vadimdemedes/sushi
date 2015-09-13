@@ -28,6 +28,28 @@ test ('match command', t => {
   app.run(['start']);
 });
 
+test ('match correct commands with similar names', t => {
+  t.plan(3);
+
+  let app = sushi();
+
+  app.on('start', function (args) {
+    t.is(args.a, 'y');
+  });
+
+  app.on('started', function (args) {
+    t.is(args.b, 'y');
+  });
+
+  app.on('starts', function (args) {
+    t.is(args.c, 'y');
+  });
+
+  app.run(['start', '--a', 'y']);
+  app.run(['started', '--b', 'y']);
+  app.run(['starts', '--c', 'y']);
+});
+
 test ('parse arguments', t => {
   t.plan(4);
 
