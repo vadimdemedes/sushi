@@ -1,4 +1,4 @@
-# sushi
+# sushi [![Circle CI](https://circleci.com/gh/vdemedes/sushi.svg?style=svg)](https://circleci.com/gh/vdemedes/sushi)
 
 Express for CLI apps.
 
@@ -125,6 +125,8 @@ app.on('error', function (err) {
 
 
 ### Tests
+
+[![Circle CI](https://circleci.com/gh/vdemedes/sushi.svg?style=svg)](https://circleci.com/gh/vdemedes/sushi)
 
 ```
 $ make test
