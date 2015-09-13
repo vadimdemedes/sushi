@@ -7,7 +7,7 @@
 var EventEmitter = require('events');
 var inherits = require('util').inherits;
 var minimist = require('minimist');
-var each = require('each-async');
+var each = require('each-series');
 
 
 /**

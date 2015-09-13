@@ -4,7 +4,7 @@
   "description": "Express for CLI apps",
   "main": "index.js",
   "dependencies": {
-    "each-async": "^1.1.1",
+    "each-series": "^1.0.0",
     "minimist": "^1.2.0"
   },
   "devDependencies": {
