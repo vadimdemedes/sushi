@@ -4,7 +4,7 @@ Express for CLI apps.
 
 <h1 align="center">
 	<br>
-	<img width="300" src="media/header.jpg">
+	<img width="300" src="media/header.png">
 	<br>
 	<br>
 	<br>
