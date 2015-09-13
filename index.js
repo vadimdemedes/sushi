@@ -105,8 +105,9 @@ Sushi.prototype._detectCommand = function (argv, options) {
       if (isMatch) {
         command = this.commands[i];
 
-        // remove command name from argument list
+        // remove command name from arguments
         args._ = list.replace(name + ' ', '').trim().split(' ');
+        argv = argv.join(' ').replace(name + ' ', '').trim().split(' ');
 
         break loop;
       }
@@ -118,7 +119,8 @@ Sushi.prototype._detectCommand = function (argv, options) {
   if (command) {
     return {
       name: command.name,
-      args: args
+      args: args,
+      argv: argv
     };
   } else {
     // if command was not found:
@@ -129,12 +131,14 @@ Sushi.prototype._detectCommand = function (argv, options) {
     if (command) {
       return {
         name: 'index',
-        args: args
+        args: args,
+        argv: argv
       };
     } else {
       return {
         name: '404',
-        args: args
+        args: args,
+        argv: argv
       };
     }
   }
@@ -156,6 +160,9 @@ Sushi.prototype.run = function (argv, options) {
   var command = this._detectCommand(argv, options);
   var context = {};
   var self = this;
+
+  context.args = command.args;
+  context.argv = command.argv;
 
   each(this.middleware, function (fn, index, next) {
     fn(command.args, context, next);
