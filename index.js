@@ -86,24 +86,27 @@ Sushi.prototype._findIndexCommand = function () {
 
 Sushi.prototype._detectCommand = function (argv, options) {
   var args = minimist(argv, options);
-
   var length = args._.length;
 
   var command;
 
   loop: while (length > 0) {
-    var list = args._.slice(0, length--);
-    var path = list.join(' ');
+    // list of arguments
+    var list = args._.slice(0, length--).join(' ');
 
     var i = 0;
 
     while (i < this.commands.length) {
-      var isMatch = path.indexOf(this.commands[i].name) >= 0;
+      // current command name
+      var name = this.commands[i].name;
+
+      var isMatch = list.indexOf(name) >= 0;
 
       if (isMatch) {
         command = this.commands[i];
 
-        args._ = path.replace(this.commands[i].name + ' ', '').split(' ');
+        // remove command name from argument list
+        args._ = list.replace(name + ' ', '').split(' ');
 
         break loop;
       }
@@ -118,6 +121,9 @@ Sushi.prototype._detectCommand = function (argv, options) {
       args: args
     };
   } else {
+    // if command was not found:
+    //  1. return index command, if it exists
+    //  2. return 404 command
     command = this._findIndexCommand();
 
     if (command) {
