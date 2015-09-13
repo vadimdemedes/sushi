@@ -150,13 +150,12 @@ Sushi.prototype._detectCommand = function (argv, options) {
 
 Sushi.prototype.run = function (argv, options) {
   if (!argv) {
-    argv = process.argv;
+    argv = process.argv.slice(2);
   }
-
-  var self = this;
 
   var command = this._detectCommand(argv, options);
   var context = {};
+  var self = this;
 
   each(this.middleware, function (fn, index, next) {
     fn(command.args, context, next);
