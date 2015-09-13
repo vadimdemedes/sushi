@@ -35,13 +35,15 @@ test ('parse arguments', t => {
 
   app.on('start', function (args) {
     t.is(Object.keys(args).length, 2);
-    t.is(args.a, 'true');
+    t.is(args.a, true);
 
     t.is(args._.length, 1);
     t.is(args._[0], 'some-value');
   });
 
-  app.run(['start', '-a', 'true', 'some-value']);
+  app.run(['start', '-a', 'true', 'some-value'], {
+    boolean: ['a']
+  });
 });
 
 test ('index command', t => {

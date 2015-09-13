@@ -66,6 +66,14 @@ $ node myapp.js start my-process --delay 500ms
 start my-process with 500ms delay
 ```
 
+You can also customize the way `minimist` parses arguments by passing options (see [minimist](https://www.npmjs.com/package/minimist#var-argv-parseargs-args-opts)):
+
+```js
+app.run(argv, {
+  boolean: ['verbose']
+});
+```
+
 
 ### Index command
 

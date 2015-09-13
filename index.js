@@ -84,8 +84,8 @@ Sushi.prototype._findIndexCommand = function () {
  * @return {Object}
  */
 
-Sushi.prototype._detectCommand = function (argv) {
-  var args = minimist(argv);
+Sushi.prototype._detectCommand = function (argv, options) {
+  var args = minimist(argv, options);
 
   var length = args._.length;
 
@@ -118,8 +118,6 @@ Sushi.prototype._detectCommand = function (argv) {
       args: args
     };
   } else {
-    var args = minimist(argv);
-
     command = this._findIndexCommand();
 
     if (command) {
@@ -144,14 +142,14 @@ Sushi.prototype._detectCommand = function (argv) {
  * @api public
  */
 
-Sushi.prototype.run = function (argv) {
+Sushi.prototype.run = function (argv, options) {
   if (!argv) {
     argv = process.argv;
   }
 
   var self = this;
 
-  var command = this._detectCommand(argv);
+  var command = this._detectCommand(argv, options);
   var context = {};
 
   each(this.middleware, function (fn, index, next) {
