@@ -8,6 +8,7 @@ var EventEmitter = require('events');
 var inherits = require('util').inherits;
 var minimist = require('minimist');
 var each = require('each-series');
+var find = require('array-find');
 
 
 /**
@@ -70,7 +71,7 @@ Sushi.prototype.on = function (name) {
  */
 
 Sushi.prototype._findIndexCommand = function () {
-  return this.commands.find(function (command) {
+  return find(this.commands, function (command) {
     return command.name === 'index';
   });
 };

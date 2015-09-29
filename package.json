@@ -4,6 +4,7 @@
   "description": "Express for CLI apps",
   "main": "index.js",
   "dependencies": {
+    "array-find": "^1.0.0",
     "each-series": "^1.0.0",
     "minimist": "^1.2.0"
   },
