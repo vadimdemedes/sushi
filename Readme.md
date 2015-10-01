@@ -1,4 +1,4 @@
-# sushi [![Circle CI](https://circleci.com/gh/vdemedes/sushi.svg?style=svg)](https://circleci.com/gh/vdemedes/sushi)
+# sushi [![Build Status](https://travis-ci.org/vdemedes/sushi.svg?branch=master)](https://travis-ci.org/vdemedes/sushi)
 
 Express for CLI apps.
 
@@ -143,7 +143,7 @@ app.on('error', function (err) {
 
 ### Tests
 
-[![Circle CI](https://circleci.com/gh/vdemedes/sushi.svg?style=svg)](https://circleci.com/gh/vdemedes/sushi)
+[![Build Status](https://travis-ci.org/vdemedes/sushi.svg?branch=master)](https://travis-ci.org/vdemedes/sushi)
 
 ```
 $ make test
