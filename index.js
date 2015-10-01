@@ -4,7 +4,7 @@
  * Dependencies
  */
 
-var EventEmitter = require('events');
+var EventEmitter = require('events').EventEmitter;
 var inherits = require('util').inherits;
 var minimist = require('minimist');
 var each = require('each-series');
