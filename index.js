@@ -23,12 +23,14 @@ module.exports = Sushi;
  */
 
 function Sushi () {
-  if (!(this instanceof Sushi)) return new Sushi();
+	if (!(this instanceof Sushi)) {
+		return new Sushi();
+	}
 
-  this.middleware = [];
-  this.commands = [];
+	this.middleware = [];
+	this.commands = [];
 
-  EventEmitter.call(this);
+	EventEmitter.call(this);
 }
 
 inherits(Sushi, EventEmitter);
@@ -42,7 +44,7 @@ inherits(Sushi, EventEmitter);
  */
 
 Sushi.prototype.use = function (fn) {
-  this.middleware.push(fn);
+	this.middleware.push(fn);
 };
 
 
@@ -55,11 +57,11 @@ Sushi.prototype.use = function (fn) {
  */
 
 Sushi.prototype.on = function (name) {
-  this.commands.push({
-    name: name
-  });
+	this.commands.push({
+		name: name
+	});
 
-  EventEmitter.prototype.on.apply(this, arguments);
+	EventEmitter.prototype.on.apply(this, arguments);
 };
 
 
@@ -71,9 +73,9 @@ Sushi.prototype.on = function (name) {
  */
 
 Sushi.prototype._findIndexCommand = function () {
-  return find(this.commands, function (command) {
-    return command.name === 'index';
-  });
+	return find(this.commands, function (command) {
+		return command.name === 'index';
+	});
 };
 
 
@@ -86,63 +88,67 @@ Sushi.prototype._findIndexCommand = function () {
  */
 
 Sushi.prototype._detectCommand = function (argv, options) {
-  var args = minimist(argv, options);
-  var length = args._.length;
+	var args = minimist(argv, options);
+	var length = args._.length;
 
-  var command;
+	var command;
 
-  loop: while (length > 0) {
-    // list of arguments
-    var list = args._.slice(0, length--).join(' ') + ' ';
+	loop: while (length > 0) {
+		// list of arguments
+		var list = args._.slice(0, length--).join(' ') + ' ';
 
-    var i = 0;
+		var i = 0;
 
-    while (i < this.commands.length) {
-      // current command name
-      var name = this.commands[i].name;
+		while (i < this.commands.length) {
+			// current command name
+			var name = this.commands[i].name;
 
-      var isMatch = list.indexOf(name + ' ') >= 0;
+			var isMatch = list.indexOf(name + ' ') >= 0;
 
-      if (isMatch) {
-        command = this.commands[i];
+			if (isMatch) {
+				command = this.commands[i];
 
-        // remove command name from arguments
-        args._ = list.replace(name + ' ', '').trim().split(' ');
-        argv = argv.join(' ').replace(name + ' ', '').trim().split(' ');
+				// remove command name from arguments
+				args._ = list.replace(name + ' ', '').trim().split(' ');
+				argv = argv.join(' ').replace(name + ' ', '').trim().split(' ');
 
-        break loop;
-      }
+				break loop;
+			}
 
-      i++;
-    }
-  }
+			i++;
+		}
+	}
 
-  if (command) {
-    return {
-      name: command.name,
-      args: args,
-      argv: argv
-    };
-  } else {
-    // if command was not found:
-    //  1. return index command, if it exists
-    //  2. return 404 command
-    command = this._findIndexCommand();
+	var result;
 
-    if (command) {
-      return {
-        name: 'index',
-        args: args,
-        argv: argv
-      };
-    } else {
-      return {
-        name: '404',
-        args: args,
-        argv: argv
-      };
-    }
-  }
+	if (command) {
+		result = {
+			name: command.name,
+			args: args,
+			argv: argv
+		};
+	} else {
+		// if command was not found:
+		//  1. return index command, if it exists
+		//  2. return 404 command
+		command = this._findIndexCommand();
+
+		if (command) {
+			result = {
+				name: 'index',
+				args: args,
+				argv: argv
+			};
+		} else {
+			result = {
+				name: '404',
+				args: args,
+				argv: argv
+			};
+		}
+	}
+
+	return result;
 };
 
 
@@ -154,25 +160,25 @@ Sushi.prototype._detectCommand = function (argv, options) {
  */
 
 Sushi.prototype.run = function (argv, options) {
-  if (!argv) {
-    argv = process.argv.slice(2);
-  }
+	if (!argv) {
+		argv = process.argv.slice(2);
+	}
 
-  var command = this._detectCommand(argv, options);
-  var context = {};
-  var self = this;
+	var command = this._detectCommand(argv, options);
+	var context = {};
+	var self = this;
 
-  context.args = command.args;
-  context.argv = command.argv;
+	context.args = command.args;
+	context.argv = command.argv;
 
-  each(this.middleware, function (fn, index, next) {
-    fn(command.args, context, next);
-  }, function (err) {
-    if (err) {
-      self.emit('error', err);
-      return;
-    }
+	each(this.middleware, function (fn, index, next) {
+		fn(command.args, context, next);
+	}, function (err) {
+		if (err) {
+			self.emit('error', err);
+			return;
+		}
 
-    self.emit(command.name, command.args, context);
-  });
+		self.emit(command.name, command.args, context);
+	});
 };

@@ -10,7 +10,7 @@
   },
   "devDependencies": {
     "ava": "^0.2.0",
-    "make-lint": "^1.0.1"
+    "xo": "^0.9.0"
   },
   "scripts": {
     "test": "make test"
@@ -31,5 +31,16 @@
   "homepage": "https://github.com/vdemedes/sushi#readme",
   "files": [
     "index.js"
-  ]
+  ],
+  "xo": {
+    "rules": {
+      "no-multiple-empty-lines": 0,
+      "space-before-function-paren": 0,
+      "object-curly-spacing": [
+        2,
+        "always"
+      ],
+      "no-labels": 1
+    }
+  }
 }
