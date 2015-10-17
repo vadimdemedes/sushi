@@ -11,15 +11,14 @@ Express for CLI apps.
 </h1>
 
 
-
-### Installation
+## Installation
 
 ```
 $ npm install sushi --save
 ```
 
 
-### Usage
+## Usage
 
 *myapp.js*:
 
@@ -54,6 +53,8 @@ $ node myapp.js
 index command
 ```
 
+
+## Getting Started
 
 ### Arguments
 
@@ -141,15 +142,13 @@ app.on('error', function (err) {
 ```
 
 
-### Tests
-
-[![Build Status](https://travis-ci.org/vdemedes/sushi.svg?branch=master)](https://travis-ci.org/vdemedes/sushi)
+## Tests
 
 ```
 $ make test
 ```
 
 
-### License
+## License
 
 MIT © [Vadym Demedes](http://vadimdemedes.com)
