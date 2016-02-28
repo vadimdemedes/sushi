@@ -71,6 +71,19 @@ test.cb('parse arguments', t => {
 	app.run(['start', '-a', 'true', 'some-value']);
 });
 
+test.cb('set command options', t => {
+	t.plan(1);
+
+	let app = sushi();
+
+	app.command('start', {a: true}, function (req) {
+		t.true(req.options.a);
+		t.end();
+	});
+
+	app.run(['start']);
+});
+
 test.cb('index command', t => {
 	t.plan(1);
 

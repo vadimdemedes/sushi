@@ -24,6 +24,9 @@ function Sushi (options) {
 		options = {};
 	}
 
+	// custom data for each command
+	this.commandOptions = {};
+
 	this.middleware = [];
 	this.commands = {};
 	this.options = options;
@@ -39,8 +42,14 @@ Sushi.prototype.use = function (fn) {
 	return this;
 };
 
-Sushi.prototype.command = function (name, fn) {
+Sushi.prototype.command = function (name, options, fn) {
+	if (typeof options === 'function') {
+		fn = options;
+		options = {};
+	}
+
 	this.commands[name] = fn;
+	this.commandOptions[name] = options;
 
 	return this;
 };
@@ -63,10 +72,12 @@ Sushi.prototype.run = function (argv) {
 		args._.shift();
 	}
 
-	var command = this.commands[name];
+	var command = this.commands[name] || null;
+	var options = this.commandOptions[name] || {};
 
 	var req = {
 		command: command,
+		options: options,
 		context: {},
 		argv: argv,
 		args: args,
