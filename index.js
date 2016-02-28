@@ -5,180 +5,126 @@
  */
 
 var EventEmitter = require('events').EventEmitter;
+var setImmediate = require('set-immediate-shim');
 var inherits = require('util').inherits;
 var minimist = require('minimist');
 var each = require('each-series');
-var find = require('array-find');
-
-
-/**
- * Expose Sushi
- */
-
-module.exports = Sushi;
 
 
 /**
  * Sushi
  */
 
-function Sushi () {
+function Sushi (options) {
 	if (!(this instanceof Sushi)) {
-		return new Sushi();
+		return new Sushi(options);
 	}
 
+	if (!options) {
+		options = {};
+	}
+
+	if (!options.args) {
+		options.args = {};
+	}
+
+	if (!options.args.boolean) {
+		options.args.boolean = [];
+	}
+
+	if (!options.args.alias) {
+		options.args.alias = {};
+	}
+
+	options.args.boolean.push('h', 'help');
+	options.args.alias.help = 'h';
+
 	this.middleware = [];
-	this.commands = [];
+	this.commands = {};
+	this.options = options;
 
 	EventEmitter.call(this);
 }
 
 inherits(Sushi, EventEmitter);
 
-
-/**
- * Add new middleware
- *
- * @param {Function} fn
- * @api public
- */
-
 Sushi.prototype.use = function (fn) {
 	this.middleware.push(fn);
+
+	return this;
 };
 
+Sushi.prototype.command = function (name, fn) {
+	this.commands[name] = fn;
 
-/**
- * Add new listener
- *
- * @param {String} name
- * @param {Function} fn
- * @api public
- */
-
-Sushi.prototype.on = function (name) {
-	this.commands.push({
-		name: name
-	});
-
-	EventEmitter.prototype.on.apply(this, arguments);
+	return this;
 };
 
+Sushi.prototype.run = function (argv) {
+	var self = this;
 
-/**
- * Return index command
- *
- * @api private
- * @return {Object}
- */
-
-Sushi.prototype._findIndexCommand = function () {
-	return find(this.commands, function (command) {
-		return command.name === 'index';
-	});
-};
-
-
-/**
- * Detect command from argv
- *
- * @param  {Array} argv
- * @api private
- * @return {Object}
- */
-
-Sushi.prototype._detectCommand = function (argv, options) {
-	var args = minimist(argv, options);
-	var length = args._.length;
-
-	var command;
-
-	loop: while (length > 0) {
-		// list of arguments
-		var list = args._.slice(0, length--).join(' ') + ' ';
-
-		var i = 0;
-
-		while (i < this.commands.length) {
-			// current command name
-			var name = this.commands[i].name;
-
-			var isMatch = list.indexOf(name + ' ') >= 0;
-
-			if (isMatch) {
-				command = this.commands[i];
-
-				// remove command name from arguments
-				args._ = list.replace(name + ' ', '').trim().split(' ');
-				argv = argv.join(' ').replace(name + ' ', '').trim().split(' ');
-
-				break loop;
-			}
-
-			i++;
-		}
-	}
-
-	var result;
-
-	if (command) {
-		result = {
-			name: command.name,
-			args: args,
-			argv: argv
-		};
-	} else {
-		// if command was not found:
-		//  1. return index command, if it exists
-		//  2. return 404 command
-		command = this._findIndexCommand();
-
-		if (command) {
-			result = {
-				name: 'index',
-				args: args,
-				argv: argv
-			};
-		} else {
-			result = {
-				name: '404',
-				args: args,
-				argv: argv
-			};
-		}
-	}
-
-	return result;
-};
-
-
-/**
- * Parse argv and run an app
- *
- * @param  {Array} argv
- * @api public
- */
-
-Sushi.prototype.run = function (argv, options) {
 	if (!argv) {
 		argv = process.argv.slice(2);
 	}
 
-	var command = this._detectCommand(argv, options);
-	var context = {};
-	var self = this;
+	var args = minimist(argv, this.options.args);
+	var name = args._[0] || 'index';
 
-	context.args = command.args;
-	context.argv = command.argv;
+	if (!this.commands[name]) {
+		name = 'index';
+	}
 
-	each(this.middleware, function (fn, index, next) {
-		fn(command.args, context, next);
+	if (name !== 'index') {
+		args._.shift();
+	}
+
+	var command = this.commands[name];
+
+	var req = {
+		command: command,
+		context: {},
+		argv: argv,
+		args: args,
+		name: name
+	};
+
+	var middleware = [].slice.call(this.middleware);
+	middleware.push(help);
+	middleware.push(exec);
+
+	each(middleware, function (fn, i, next) {
+		setImmediate(function () {
+			fn.call(self, req, next);
+		});
 	}, function (err) {
 		if (err) {
 			self.emit('error', err);
-			return;
 		}
-
-		self.emit(command.name, command.args, context);
 	});
 };
+
+
+/**
+ * Middleware
+ */
+
+function help (req, next) {
+	if (req.args.help) {
+		console.log(this.options.help);
+		return;
+	}
+
+	next();
+}
+
+function exec (req, next) {
+	req.command(req);
+	next();
+}
+
+
+/**
+ * Expose module
+ */
+
+module.exports = Sushi;
