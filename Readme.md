@@ -1,6 +1,7 @@
 # sushi
 
 [![Build Status](https://travis-ci.org/vdemedes/sushi.svg?branch=master)](https://travis-ci.org/vdemedes/sushi)
+[![Coverage Status](https://coveralls.io/repos/github/vdemedes/sushi/badge.svg?branch=master)](https://coveralls.io/github/vdemedes/sushi?branch=master)
 
 Express-like framework for CLI apps.
 
