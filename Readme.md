@@ -63,7 +63,6 @@ index command
 - [Arguments](#arguments)
 - [Index command](#index-command)
 - [Middleware](#middleware)
-- [Help message](#help-message)
 - [Error handling](#error-handling)
 
 ### Arguments
@@ -147,22 +146,6 @@ app.on('error', function (err) {
   // err is the Error instance from middleware
   err.message === 'Fatal error'; // true
 });
-```
-
-### Help message
-
-Sushi takes care of outputting help messages for you.
-All you have to do is to set it via `help` property:
-
-```js
-const app = sushi({
-	help: 'my help message'
-});
-```
-
-```
-$ node myapp.js -h
-my help message
 ```
 
 ### Error handling

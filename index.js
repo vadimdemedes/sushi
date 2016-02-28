@@ -24,21 +24,6 @@ function Sushi (options) {
 		options = {};
 	}
 
-	if (!options.args) {
-		options.args = {};
-	}
-
-	if (!options.args.boolean) {
-		options.args.boolean = [];
-	}
-
-	if (!options.args.alias) {
-		options.args.alias = {};
-	}
-
-	options.args.boolean.push('h', 'help');
-	options.args.alias.help = 'h';
-
 	this.middleware = [];
 	this.commands = {};
 	this.options = options;
@@ -89,7 +74,6 @@ Sushi.prototype.run = function (argv) {
 	};
 
 	var middleware = [].slice.call(this.middleware);
-	middleware.push(help);
 	middleware.push(exec);
 
 	each(middleware, function (fn, i, next) {
@@ -107,15 +91,6 @@ Sushi.prototype.run = function (argv) {
 /**
  * Middleware
  */
-
-function help (req, next) {
-	if (req.args.help) {
-		console.log(this.options.help);
-		return;
-	}
-
-	next();
-}
 
 function exec (req, next) {
 	req.command(req);

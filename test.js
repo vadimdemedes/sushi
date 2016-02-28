@@ -160,22 +160,3 @@ test.cb('emit error when middleware fails', t => {
 
 	app.run(['start']);
 });
-
-test.cb('help message', t => {
-	t.plan(1);
-
-	let app = sushi({
-		help: 'help message'
-	});
-
-	var oldConsoleLog = console.log;
-
-	console.log = function (str) {
-		t.is(str, 'help message');
-
-		console.log = oldConsoleLog;
-		t.end();
-	};
-
-	app.run(['-h']);
-});
