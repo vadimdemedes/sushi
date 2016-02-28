@@ -162,6 +162,13 @@ app.on('error', function (err) {
 You can use it to display a friendly error message, report it, etc.
 
 
+## List of middleware
+
+Here's the list of middleware you can use with Sushi:
+
+- [help](https://github.com/vdemedes/sushi-help) - help messages
+
+
 ## Tests
 
 ```
