@@ -108,7 +108,7 @@ test('404 command', t => {
 	app.run(['some-value', '-a', 'true']);
 });
 
-test('use middleware', t => {
+test.cb('use middleware', t => {
 	t.plan(1);
 
 	let app = sushi();
@@ -120,10 +120,12 @@ test('use middleware', t => {
 
 	app.on('start', function (args, context) {
 		t.true(context.ok);
+		t.end();
 	});
 
 	app.on('stop', function () {
 		t.fail();
+		t.end();
 	});
 
 	app.run(['start']);

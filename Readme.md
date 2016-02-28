@@ -1,4 +1,6 @@
-# sushi [![Build Status](https://travis-ci.org/vdemedes/sushi.svg?branch=master)](https://travis-ci.org/vdemedes/sushi)
+# sushi
+
+[![Build Status](https://travis-ci.org/vdemedes/sushi.svg?branch=master)](https://travis-ci.org/vdemedes/sushi)
 
 Express for CLI apps.
 
@@ -23,9 +25,9 @@ $ npm install sushi --save
 *myapp.js*:
 
 ```js
-var sushi = require('sushi');
+const sushi = require('sushi');
 
-var app = sushi();
+const app = sushi();
 
 app.on('start', function () {
   console.log('start command');
@@ -145,7 +147,7 @@ app.on('error', function (err) {
 ## Tests
 
 ```
-$ make test
+$ npm test
 ```
 
 

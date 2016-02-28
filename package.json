@@ -2,45 +2,31 @@
   "name": "sushi",
   "version": "1.2.2",
   "description": "Express for CLI apps",
-  "main": "index.js",
+  "author": "Vadim Demedes <vdemedes@gmail.com>",
+  "license": "MIT",
+  "repository": "vdemedes/sushi",
+  "scripts": {
+    "test": "xo && ava"
+  },
   "dependencies": {
     "array-find": "^1.0.0",
     "each-series": "^1.0.0",
     "minimist": "^1.2.0"
   },
   "devDependencies": {
-    "ava": "^0.2.0",
-    "xo": "^0.9.0"
-  },
-  "scripts": {
-    "test": "make test"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/vdemedes/sushi.git"
+    "ava": "^0.12.0",
+    "eslint-config-vdemedes": "^1.0.2",
+    "xo": "^0.12.1"
   },
   "keywords": [
     "cli",
     "express"
   ],
-  "author": "Vadim Demedes <vdemedes@gmail.com>",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/vdemedes/sushi/issues"
-  },
-  "homepage": "https://github.com/vdemedes/sushi#readme",
   "files": [
     "index.js"
   ],
   "xo": {
-    "rules": {
-      "no-multiple-empty-lines": 0,
-      "space-before-function-paren": 0,
-      "object-curly-spacing": [
-        2,
-        "always"
-      ],
-      "no-labels": 1
-    }
+    "extends": "vdemedes",
+    "env": "node"
   }
 }
