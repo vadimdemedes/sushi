@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/vdemedes/sushi.svg?branch=master)](https://travis-ci.org/vdemedes/sushi)
 
-Express for CLI apps.
+Express-like framework for CLI apps.
 
 <h1 align="center">
 	<br>
@@ -29,20 +29,22 @@ const sushi = require('sushi');
 
 const app = sushi();
 
-app.on('start', function () {
+app.command('start', function () {
   console.log('start command');
 });
 
-app.on('stop', function () {
+app.command('stop', function () {
   console.log('stop command');
 });
 
-app.on('index', function () {
+app.command('index', function () {
   console.log('index command');
 });
 
 app.run();
 ```
+
+Output:
 
 ```
 $ node myapp.js start
@@ -58,16 +60,21 @@ index command
 
 ## Getting Started
 
+- [Arguments](#arguments)
+- [Index command](#index-command)
+- [Middleware](#middleware)
+- [Help message](#help-message)
+- [Error handling](#error-handling)
+
 ### Arguments
 
 Program arguments are parsed using [minimist](https://npmjs.org/package/minimist).
-Each command gets parsed arguments using `minimist` in a first argument:
+Command can access arguments via `req.args`:
 
 ```js
-app.on('start', function (args) {
-  var name = args._[0];
-
-  var delay = args.delay;
+app.command('start', function (req) {
+  var name = req.args._[0];
+  var delay = req.args.delay;
 
   console.log('start', name, 'with', delay, 'delay');
 });
@@ -78,22 +85,22 @@ $ node myapp.js start my-process --delay 500ms
 start my-process with 500ms delay
 ```
 
-You can also customize the way `minimist` parses arguments by passing options (see [minimist](https://www.npmjs.com/package/minimist#var-argv-parseargs-args-opts)):
+You can also customize the way `minimist` parses arguments by passing `args` options (see [minimist](https://www.npmjs.com/package/minimist#var-argv-parseargs-args-opts)):
 
 ```js
-app.run(argv, {
-  boolean: ['verbose']
+const app = sushi({
+	args: {
+		boolean: ['verbose']
+	}
 });
 ```
 
-
 ### Index command
 
-Index command can be assigned using `.on('index', fn)`.
-It will be executed, when no other commands match.
+Index command is executed when other commands don't match the arguments:
 
 ```js
-app.on('index', function (args) {
+app.command('index', function () {
   console.log('index command');
 });
 ```
@@ -101,47 +108,75 @@ app.on('index', function (args) {
 ```
 $ node myapp.js
 index command
-```
 
+$ node myapp.js hello
+```
 
 ### Middleware
 
 Middleware is a function, that modifies the context or arguments before target command is executed.
 
 ```js
-app.use(function (args, context, next) {
-  context.ok = true;
+app.use(function (req, next) {
+  req.context.ok = true;
 
   // call `next()` when done
   next();
 });
 
-app.on('start', function (args, context) {
-  context.ok === true; // true
+app.command('start', function (req) {
+  req.context.ok === true; // true
 
   console.log('start command');
 });
 ```
 
-Middleware can also abort command:
+Middleware can also abort execution:
 
 ```js
-app.use(function (args, context, next) {
+app.use(function (req, next) {
   var err = new Error('Fatal error');
-
   next(err);
 });
 
-app.on('start', function (args, context) {
+app.command('start', function (req) {
   // won't be executed
 });
 
 app.on('error', function (err) {
   // err is the Error instance from middleware
-
   err.message === 'Fatal error'; // true
 });
 ```
+
+### Help message
+
+Sushi takes care of outputting help messages for you.
+All you have to do is to set it via `help` property:
+
+```js
+const app = sushi({
+	help: 'my help message'
+});
+```
+
+```
+$ node myapp.js -h
+my help message
+```
+
+### Error handling
+
+When one of the middleware or command itself throws an error,
+`error` event is emitted:
+
+```js
+app.on('error', function (err) {
+	// err is the Error instance
+});
+```
+
+You can use it to display a friendly error message, report it, etc.
 
 
 ## Tests
