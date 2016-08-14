@@ -1,18 +1,14 @@
-# sushi
+# sushi [![Build Status](https://travis-ci.org/vdemedes/sushi.svg?branch=master)](https://travis-ci.org/vdemedes/sushi) [![Coverage Status](https://coveralls.io/repos/github/vdemedes/sushi/badge.svg?branch=master)](https://coveralls.io/github/vdemedes/sushi?branch=master)
 
-[![Build Status](https://travis-ci.org/vdemedes/sushi.svg?branch=master)](https://travis-ci.org/vdemedes/sushi)
-[![Coverage Status](https://coveralls.io/repos/github/vdemedes/sushi/badge.svg?branch=master)](https://coveralls.io/github/vdemedes/sushi?branch=master)
-
-Express-like framework for CLI apps.
+> Koa-like framework for CLI tools. Everything is a middleware.
 
 <h1 align="center">
 	<br>
-	<img width="300" src="media/header.png">
+	<img width="200" src="media/header.png">
 	<br>
 	<br>
 	<br>
 </h1>
-
 
 ## Installation
 
@@ -20,25 +16,26 @@ Express-like framework for CLI apps.
 $ npm install sushi --save
 ```
 
-
 ## Usage
 
-*myapp.js*:
+*mycli.js*:
 
 ```js
 const sushi = require('sushi');
+const parse = require('sushi-parse');
+const help = require('sushi-help');
 
 const app = sushi();
 
-app.command('start', function () {
-  console.log('start command');
+app.use(parse());
+
+app.use('hello', help('Help for "hello" command'));
+app.use('hello', () => {
+  console.log('hello command');
 });
 
-app.command('stop', function () {
-  console.log('stop command');
-});
-
-app.command('index', function () {
+app.use('index', help('Help for "index" command'));
+app.use('index', () => {
   console.log('index command');
 });
 
@@ -48,134 +45,167 @@ app.run();
 Output:
 
 ```
-$ node myapp.js start
-start command
+$ node mycli.js hello
+hello command
 
-$ node myapp.js stop
-stop command
+$ node mycli.js hello --help
+Help for "hello" command
 
-$ node myapp.js
+$ node mycli.js
 index command
-```
 
+$ node mycli.js --help
+Help for "index" command
+```
 
 ## Getting Started
 
-- [Arguments](#arguments)
-- [Index command](#index-command)
-- [Middleware](#middleware)
-- [Error handling](#error-handling)
+Sushi is a middlewayer layer for CLI apps. It's what Connect is to Express.
 
-### Arguments
+### Create an app
 
-Program arguments are parsed using [minimist](https://npmjs.org/package/minimist).
-Command can access arguments via `req.args`:
+To initialize Sushi, create its instance, called an "app":
 
 ```js
-app.command('start', function (req) {
-  var name = req.args._[0];
-  var delay = req.args.delay;
-
-  console.log('start', name, 'with', delay, 'delay');
-});
+const app = sushi();
 ```
 
-```
-$ node myapp.js start my-process --delay 500ms
-start my-process with 500ms delay
-```
+### Use middleware
 
-You can also customize the way `minimist` parses arguments by passing `args` options (see [minimist](https://www.npmjs.com/package/minimist#var-argv-parseargs-args-opts)):
+Middleware are generator functions, executed one-by-one (serially) until a function does not call `next`,
+which passes execution onto the next middleware. 
 
 ```js
-const app = sushi({
-	args: {
-		boolean: ['verbose']
-	}
+app.use(function * middleware1(next) {
+  yield next;
+});
+
+app.use(function * middleware2(next) {
+	yield next;
 });
 ```
 
-### Index command
-
-Index command is executed when other commands don't match the arguments:
+Middleware can also abort execution by throwing an error:
 
 ```js
-app.command('index', function () {
-  console.log('index command');
-});
-```
-
-```
-$ node myapp.js
-index command
-
-$ node myapp.js hello
-```
-
-### Middleware
-
-Middleware is a function, that modifies the context or arguments before target command is executed.
-
-```js
-app.use(function (req, next) {
-  req.context.ok = true;
-
-  // call `next()` when done
-  next();
+app.use(function * (next) {
+  throw new Error('Fatal error');
 });
 
-app.command('start', function (req) {
-  req.context.ok === true; // true
-
-  console.log('start command');
-});
-```
-
-Middleware can also abort execution:
-
-```js
-app.use(function (req, next) {
-  var err = new Error('Fatal error');
-  next(err);
-});
-
-app.command('start', function (req) {
+app.use(function * (next) {
   // won't be executed
 });
+```
 
-app.on('error', function (err) {
-  // err is the Error instance from middleware
-  err.message === 'Fatal error'; // true
+### Mount middleware
+
+The `.use()` method also takes an option path string that is matched against the first non-flag argument.
+
+```js
+app.use('start', function * (next) {
+	console.log('first');
+	yield next;
 });
+
+// equivalent to app.use(fn)
+app.use('*', function * (next) {
+	console.log('second');
+	yield next;
+});
+```
+
+Output:
+
+```
+$ node mycli.js start
+first
+second
+
+$ node mycli.js stop
+second
 ```
 
 ### Error handling
 
-When one of the middleware or command itself throws an error,
-`error` event is emitted:
+Error handling is the same as in Koa framework. Write a middleware that wraps next middleware into `try/catch`:
 
 ```js
-app.on('error', function (err) {
+app.use(function * (next) {
+	try {
+		yield next;
+	} catch (err) {
+		// handle error
+	}
+});
+```
+
+When one of the middleware or command itself throws an error, `error` event is emitted:
+
+```js
+app.on('error', err => {
 	// err is the Error instance
 });
 ```
 
 You can use it to display a friendly error message, report it, etc.
 
+### Commands
 
-## List of middleware
+Command is the last function in the middleware stack.
+Unlike middleware, it can be anything: async function, "regular" function or function that returns a Promise.
+Make sure you add commands after the middleware.
+
+```js
+app.use('start', () => {
+	// regular function
+});
+
+app.use('stop', async () => {
+	// async function
+});
+
+app.use('restart', () => {
+	// function that returns a Promise
+	return Promise.resolve();
+});
+
+app.use('shutdown', function * () {
+	// and of course, generator function
+});
+```
+
+### Run application
+
+After all the middleware is added, run the application using `.run()` method.
+
+```js
+app.run();
+```
+
+Optional array of arguments can be supplied to be used instead of `process.argv` when parsing arguments.
+
+```js
+const argv = ['my', 'fake', 'arguments'];
+app.run(argv);
+```
+
+The `.run()` method returns a Promise, so you can get notified when the application finishes its execution or an error is thrown.
+
+```js
+app.run()
+	.then(() => {
+		// all done
+	})
+	.catch(err => {
+		// oh no, there's an error
+	});
+```
+
+## Middleware
 
 Here's the list of middleware you can use with Sushi:
 
 - [help](https://github.com/vdemedes/sushi-help) - help messages
-
-
-## Tests
-
-```
-$ npm test
-```
-
 
 ## License
 
