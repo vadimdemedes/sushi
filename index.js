@@ -1,116 +1,96 @@
 'use strict';
 
-/**
- * Dependencies
- */
+const EventEmitter = require('events').EventEmitter;
+const inherits = require('util').inherits;
+const isGeneratorFn = require('is-generator-fn');
+const pathToRegexp = require('path-to-regexp');
+const isPromise = require('is-promise');
+const minimist = require('minimist');
+const compose = require('koa-compose');
+const co = require('co');
 
-var EventEmitter = require('events').EventEmitter;
-var setImmediate = require('set-immediate-shim');
-var inherits = require('util').inherits;
-var minimist = require('minimist');
-var each = require('each-series');
-
-
-/**
- * Sushi
- */
-
-function Sushi (options) {
+function Sushi() {
 	if (!(this instanceof Sushi)) {
-		return new Sushi(options);
+		return new Sushi();
 	}
-
-	if (!options) {
-		options = {};
-	}
-
-	// custom data for each command
-	this.commandOptions = {};
-
-	this.middleware = [];
-	this.commands = {};
-	this.options = options;
 
 	EventEmitter.call(this);
+
+	this.stack = [];
 }
 
+module.exports = Sushi;
 inherits(Sushi, EventEmitter);
 
-Sushi.prototype.use = function (fn) {
-	this.middleware.push(fn);
-
-	return this;
-};
-
-Sushi.prototype.command = function (name, options, fn) {
-	if (typeof options === 'function') {
-		fn = options;
-		options = {};
+Sushi.prototype.use = function (path, fn) {
+	if (path === 'index') {
+		path = '';
 	}
 
-	this.commands[name] = fn;
-	this.commandOptions[name] = options;
+	if (typeof path === 'function') {
+		fn = path;
+		path = '*';
+	}
+
+	this.stack.push({
+		path: pathToRegexp(path),
+		fn: fn
+	});
 
 	return this;
 };
 
 Sushi.prototype.run = function (argv) {
-	var self = this;
-
 	if (!argv) {
 		argv = process.argv.slice(2);
 	}
 
-	var args = minimist(argv, this.options.args);
-	var name = args._[0] || 'index';
+	const args = minimist(argv);
+	argv.shift();
 
-	if (!this.commands[name]) {
-		name = 'index';
-	}
-
-	if (name !== 'index') {
-		args._.shift();
-	}
-
-	var command = this.commands[name] || null;
-	var options = this.commandOptions[name] || {};
-
-	var req = {
-		command: command,
-		options: options,
-		context: {},
-		argv: argv,
-		args: args,
-		name: name
+	const path = args._[0] || '';
+	const context = {
+		path: path,
+		argv: argv
 	};
 
-	var middleware = [].slice.call(this.middleware);
-	middleware.push(exec);
+	// first try to find an exact `path` match among middleware
+	let stack = this.stack.filter(item => item.path.test(path));
 
-	each(middleware, function (fn, i, next) {
-		setImmediate(function () {
-			fn.call(self, req, next);
-		});
-	}, function (err) {
-		if (err) {
-			self.emit('error', err);
+	// if no exact match found, try to find an `index` middleware
+	if (stack.length === 0) {
+		stack = this.stack.filter(item => item.path.test(''));
+	}
+
+	stack = stack.map((item, index) => {
+		if (isGeneratorFn(item.fn)) {
+			return item.fn;
 		}
+
+		if (index !== stack.length - 1) {
+			const err = new Error('Non-generator function must be last in the middleware chain.');
+			throw err;
+		}
+
+		// convert last non-generator function into a generator function
+		return function * (next) {
+			const ret = item.fn();
+
+			// if promise is returned, wait for its execution
+			if (isPromise(ret)) {
+				yield ret;
+			}
+
+			yield next;
+		};
 	});
+
+	return co
+		.wrap(compose(stack))
+		.call(context)
+		.catch(err => {
+			this.emit('error', err);
+
+			return Promise.reject(err);
+		});
 };
-
-
-/**
- * Middleware
- */
-
-function exec (req, next) {
-	req.command(req);
-	next();
-}
-
-
-/**
- * Expose module
- */
-
-module.exports = Sushi;

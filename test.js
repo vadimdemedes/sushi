@@ -1,175 +1,189 @@
 'use strict';
 
-/**
- * Dependencies
- */
-
-const sushi = require('./');
 const test = require('ava');
+const sushi = require('./');
 
+test('match command', t => {
+	const app = sushi();
+	const stack = [];
 
-/**
- * Tests
- */
-
-test.cb('match command', t => {
-	t.plan(1);
-
-	let app = sushi();
-
-	app.command('start', function () {
-		t.pass();
-		t.end();
+	app.use('stop', () => {
+		stack.push('stop');
 	});
 
-	app.command('stop', function () {
-		t.fail();
-		t.end();
+	app.use('start', () => {
+		stack.push('start');
 	});
 
-	app.run(['start']);
+	return app.run(['start']).then(() => {
+		t.deepEqual(stack, ['start']);
+	});
 });
 
-test.cb('match correct commands with similar names', t => {
-	t.plan(3);
+test('match correct commands with similar names', t => {
+	const app = sushi();
+	const stack = [];
 
-	let app = sushi();
-
-	app.command('start', function (req) {
-		t.is(req.args.a, 'y');
+	app.use('start', () => {
+		stack.push('start');
 	});
 
-	app.command('started', function (req) {
-		t.is(req.args.b, 'y');
+	app.use('started', () => {
+		stack.push('started');
 	});
 
-	app.command('starts', function (req) {
-		t.is(req.args.c, 'y');
-		t.end();
+	app.use('starts', () => {
+		stack.push('starts');
 	});
 
-	app.run(['start', '--a', 'y']);
-	app.run(['started', '--b', 'y']);
-	app.run(['starts', '--c', 'y']);
+	return app.run(['start'])
+		.then(() => app.run(['started']))
+		.then(() => app.run(['starts']))
+		.then(() => {
+			t.deepEqual(stack, ['start', 'started', 'starts']);
+		});
 });
 
-test.cb('parse arguments', t => {
-	t.plan(2);
+test('execute middleware', t => {
+	const app = sushi();
+	const stack = [];
 
-	let app = sushi({
-		args: {
-			boolean: ['a']
+	app.use('start', function * (next) {
+		stack.push('first');
+		yield next;
+	});
+
+	app.use('start', function * (next) {
+		yield next;
+		stack.push('third');
+	});
+
+	app.use('start', () => {
+		stack.push('second');
+	});
+
+	return app.run(['start']).then(() => {
+		t.deepEqual(stack, ['first', 'second', 'third']);
+	});
+});
+
+test('explicit index command', t => {
+	const app = sushi();
+	const stack = [];
+
+	app.use('index', () => {
+		stack.push('index');
+	});
+
+	return app.run([]).then(() => {
+		t.deepEqual(stack, ['index']);
+	});
+});
+
+test('implicit index command', t => {
+	const app = sushi();
+	const stack = [];
+
+	app.use('index', () => {
+		stack.push('index');
+	});
+
+	return app.run(['hello']).then(() => {
+		t.deepEqual(stack, ['index']);
+	});
+});
+
+test('handle errors', t => {
+	const app = sushi();
+	let thrownErr;
+
+	app.use(function * (next) {
+		try {
+			yield next;
+		} catch (err) {
+			thrownErr = err;
 		}
 	});
 
-	app.command('start', function (req) {
-		t.true(req.args.a);
-		t.same(req.args._, ['some-value']);
-		t.end();
+	app.use(() => {
+		throw new Error('Oops');
 	});
 
-	app.run(['start', '-a', 'true', 'some-value']);
+	return app.run([])
+		.then(() => {
+			t.true(thrownErr instanceof Error);
+			t.is(thrownErr.message, 'Oops');
+		});
 });
 
-test.cb('set command options', t => {
-	t.plan(1);
+test('fail on unhandled error', t => {
+	const app = sushi();
+	let thrownErr;
 
-	let app = sushi();
-
-	app.command('start', {a: true}, function (req) {
-		t.true(req.options.a);
-		t.end();
+	app.on('error', err => {
+		thrownErr = err;
 	});
 
-	app.run(['start']);
+	app.use(() => {
+		throw new Error('Oops');
+	});
+
+	return app.run([])
+		.then(() => t.fail())
+		.catch(err => {
+			t.true(err instanceof Error);
+			t.is(err, thrownErr);
+			t.is(err.message, 'Oops');
+		});
 });
 
-test.cb('index command', t => {
-	t.plan(1);
+test('execute non-generator functions', t => {
+	const app = sushi();
+	const stack = [];
 
-	let app = sushi();
-
-	app.command('index', function () {
-		t.pass();
-		t.end();
+	app.use(function * (next) {
+		stack.push('generator');
+		yield next;
 	});
 
-	app.run([]);
+	app.use(() => {
+		stack.push('regular');
+	});
+
+	return app.run([]).then(() => {
+		t.deepEqual(stack, ['generator', 'regular']);
+	});
 });
 
-test.cb('index command with arguments', t => {
-	t.plan(2);
+test('throw when non-generator function is not last', t => {
+	const app = sushi();
+	const stack = [];
 
-	let app = sushi({
-		args: {
-			boolean: ['a']
-		}
+	app.use(function * (next) {
+		stack.push('generator');
+		yield next;
 	});
 
-	app.command('index', function (req) {
-		t.true(req.args.a);
-		t.same(req.args._, ['some-value']);
-		t.end();
+	app.use(() => {
+		stack.push('regular');
 	});
 
-	app.run(['some-value', '-a', 'true']);
-});
-
-test.cb('404 command', t => {
-	t.plan(1);
-
-	let app = sushi();
-
-	app.use(function (req) {
-		if (!req.command) {
-			t.pass();
-			t.end();
-			return;
-		}
-
-		t.fail();
-		t.end();
+	app.use(function * () { // eslint-disable-line require-yield
+		stack.push('generator');
 	});
 
-	app.run(['some-value', '-a', 'true']);
-});
+	let errorThrown = false;
 
-test.cb('use middleware', t => {
-	t.plan(1);
+	try {
+		app.run([]);
+	} catch (err) {
+		errorThrown = true;
 
-	let app = sushi();
+		t.deepEqual(stack, []);
+		t.is(err.message, 'Non-generator function must be last in the middleware chain.');
+	}
 
-	app.use(function (req, next) {
-		req.context.ok = true;
-		next();
-	});
-
-	app.command('start', function (req) {
-		t.true(req.context.ok);
-		t.end();
-	});
-
-	app.run(['start']);
-});
-
-test.cb('emit error when middleware fails', t => {
-	t.plan(1);
-
-	let app = sushi();
-
-	app.use(function (req, next) {
-		next(new Error('Oops'));
-	});
-
-	app.command('start', function () {
-		t.fail();
-		t.end();
-	});
-
-	app.on('error', function (err) {
-		t.is(err.message, 'Oops');
-		t.end();
-	});
-
-	app.run(['start']);
+	if (!errorThrown) {
+		t.fail('app.run() passed, but should\'ve failed.');
+	}
 });
