@@ -46,9 +46,11 @@ Sushi.prototype.run = function (argv) {
 	}
 
 	const args = minimist(argv);
-	argv.shift();
-
 	const path = args._[0] || '';
+	if (path) {
+		argv.splice(argv.indexOf(path), 1);
+	}
+
 	const context = {
 		path: path,
 		argv: argv
